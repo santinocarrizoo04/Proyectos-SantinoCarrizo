@@ -23,7 +23,7 @@ Luego es necesario hacer el deploy del proyecto y asignar las variables por conf
 ./configure.sh PATH_XXXX /xxx/xxx
 ```
 
-Por ultimo ejecutar los modulos en el siguiente orden: 
+Por ultimo ejecutar los modulos, pasandole el path de la config, en el siguiente orden: 
 
 1. Memoria
 2. CPU
