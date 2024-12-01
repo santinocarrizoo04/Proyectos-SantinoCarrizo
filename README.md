@@ -5,7 +5,7 @@ Bienvenidos a mi repositorio de proyectos. Aquí encontrarán una recopilación 
 
 
 
-## Principales Proyectos
+## Proyectos Principales
 
 
 
