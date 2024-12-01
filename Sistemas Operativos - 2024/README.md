@@ -8,14 +8,14 @@ https://docs.google.com/document/d/1XsBsJynoN5A9PTsTEaZsj0q3zsEtcnLgdAHOQ4f_4-g/
 
 ## Deploy del TP
 
-Para poder hacer el deploy del TP y ejecutar el proyecto, es necesario tener clonado el siguiente repo:
+Para poder hacer el deploy del TP y ejecutar el proyecto, es necesario tener clonado el siguiente repositorio:
 
 ```bash
 git clone https://github.com/sisoputnfrba/so-deploy.git
 cd so-deploy
 ```
 
-Luego es necesario hacer el deploy del proyecto y asignar las variables por config (IP's de los modulos y PATH's)
+Luego es necesario hacer el deploy del proyecto y asignar las variables por configuracion (IP's de los modulos y PATH's)
 
 ```bash
 ./deploy.sh -r=release -p=utils -p=kernel -p=cpu -p=memoria -p=entradasalida "tp-2024-1c-ChatGPT-CarreanOS"
@@ -23,7 +23,7 @@ Luego es necesario hacer el deploy del proyecto y asignar las variables por conf
 ./configure.sh PATH_XXXX /xxx/xxx
 ```
 
-Por ultimo ejecutar los modulos, pasandole el path de la config, en el siguiente orden: 
+Por ultimo ejecutar los modulos, pasandole el path de la configuracion, en el siguiente orden: 
 
 1. Memoria
 2. CPU
