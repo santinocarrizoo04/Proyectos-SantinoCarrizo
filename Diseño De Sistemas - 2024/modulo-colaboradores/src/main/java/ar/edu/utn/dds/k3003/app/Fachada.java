@@ -24,32 +24,34 @@ import lombok.Setter;
 import io.micrometer.core.instrument.Counter;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 
 @Getter
 @Setter
 public class Fachada implements FachadaColaboradores{
 
-    private final ColaboradorRepository colaboradorRepository;
-    private final ColaboradorMapper colaboradorMapper;
+    private ColaboradorRepository colaboradorRepository;
+    private ColaboradorMapper colaboradorMapper;
     private Double viandasDistribuidasPeso, viandasDonadasPeso, dineroDonadoPeso, arregloPeso;
     private FachadaViandas viandasFachada;
     private FachadaLogistica logisticaFachada;
     private HeladeraProxy heladerasFachada;
-    private IncidenteProxy incidenteProxy;
-    private TelegramProxy telegramProxy;
+    private IncidenteProxy incidenteFachada;
+    private TelegramProxy telegramFachada;
     private static AtomicLong seqId = new AtomicLong();
 
     private PrometheusMeterRegistry registry;
     private Counter cantidadColaboradores;
     private Counter puntosTotal;
 
-    public Fachada(){
-        this.colaboradorRepository = new ColaboradorRepository();
+    public Fachada(EntityManager entityManager){
+        this.colaboradorRepository = new ColaboradorRepository(entityManager);
         this.colaboradorMapper = new ColaboradorMapper();
     }
 
-    public MiColaboradorDTO agregarJPA(MiColaboradorDTO colaboradorDTO, EntityManager em) {
+    public Fachada(){
+    }
+
+    public MiColaboradorDTO agregarJPA(MiColaboradorDTO colaboradorDTO) {
         Colaborador colaborador = new Colaborador();
         colaborador.setNombre(colaboradorDTO.getNombre());
         colaborador.setFormas(colaboradorDTO.getFormas());
@@ -58,67 +60,60 @@ public class Fachada implements FachadaColaboradores{
         colaborador.setHeladerasReparadas((double)0);
         colaborador.setChatID(null);
 
-        em.getTransaction().begin();
-        Colaborador colabRta = this.colaboradorRepository.saveJPA(colaborador, em);
-        em.getTransaction().commit();
+        Colaborador colaboradorRta = this.colaboradorRepository.saveJPA(colaborador);
         cantidadColaboradores.increment();
-        return colaboradorMapper.map(colabRta);
+        return colaboradorMapper.map(colaboradorRta);
     }
-    public MiColaboradorDTO buscarXIdJPA(Long colaboradorId, EntityManager em){
-        em.getTransaction().begin();
-        Colaborador colab = colaboradorRepository.findByIdJPA(colaboradorId, em);
-        em.getTransaction().commit();
+    public MiColaboradorDTO buscarXIdJPA(Long colaboradorId){
+        Colaborador colab = colaboradorRepository.findByIdJPA(colaboradorId);
         return colaboradorMapper.map(colab);
     }
 
     public MiColaboradorDTO modificarJPA(
-            Long colaboradorId, List<MisFormasDeColaborar> nuevasFormasDeColaborar, EntityManager em){
-        em.getTransaction().begin();
-        colaboradorRepository.modificarFormasDeJPA(colaboradorId, nuevasFormasDeColaborar, em);
-        em.getTransaction().commit();
-        return this.buscarXIdJPA(colaboradorId, em);
+            Long colaboradorId, List<MisFormasDeColaborar> nuevasFormasDeColaborar){
+        colaboradorRepository.modificarFormasDeJPA(colaboradorId, nuevasFormasDeColaborar);
+        return this.buscarXIdJPA(colaboradorId);
     }
 
-    public Double puntosJPA(Long colaboradorId, EntityManager em, Integer anio, Integer mes) {
+    public Double puntosJPA(Long colaboradorId, Integer anio, Integer mes) {
+
+        var viandasDistribuidas = logisticaFachada.trasladosDeColaborador(colaboradorId, mes, anio).size();
+        var viandasDonadas = viandasFachada.viandasDeColaborador(colaboradorId, mes, anio).size();
+
+        Colaborador colaborador = colaboradorRepository.findByIdJPA(colaboradorId);
+
+        var dineroDonado = colaborador.getDineroDonado();
+        var heladerasReparadas = colaborador.getHeladerasReparadas();
+
         Double puntosCalculados =
-                ((this.viandasDistribuidasPeso * logisticaFachada.trasladosDeColaborador(colaboradorId, mes, anio).size()))
-                        + (this.viandasDonadasPeso * viandasFachada.viandasDeColaborador(colaboradorId, mes, anio).size());
-        em.getTransaction().begin();
-        Colaborador colaborador = em.find(Colaborador.class, colaboradorId);
-        puntosCalculados = puntosCalculados + (colaborador.getDineroDonado() * dineroDonadoPeso)
-                + (colaborador.getHeladerasReparadas() * arregloPeso);
-        colaborador.setPuntos(puntosCalculados);
-        em.getTransaction().commit();
+                (this.viandasDistribuidasPeso * viandasDistribuidas)
+                        + (this.viandasDonadasPeso * viandasDonadas)
+                        + (this.dineroDonadoPeso * dineroDonado)
+                        + (this.arregloPeso *  heladerasReparadas);
+
+        colaboradorRepository.setPuntos(colaboradorId, puntosCalculados);
         puntosTotal.increment(puntosCalculados);
         return puntosCalculados;
     }
 
-    public boolean donarDinero(Long id , DineroDTO dineroDonado, EntityManager em){
+    public boolean donarDinero(Long id , DineroDTO dineroDonado){
 
-        Double dinero = dineroDonado.getDineroDonado();
-        boolean resul;
+        Double donacion = dineroDonado.getDineroDonado();
 
-        em.getTransaction().begin();
-        Colaborador colab = em.find(Colaborador.class, id);
-        if(colab.getFormas().contains(MisFormasDeColaborar.DONADORDEDINERO)){
-            Double dineroAnterior = colab.getDineroDonado();
-            Double dineroNuevo = dineroAnterior + dinero;
-            colab.setDineroDonado(dineroNuevo);
-            resul = true;
+        Colaborador colaborador = colaboradorRepository.findByIdJPA(id);
+        if(colaborador.getFormas().contains(MisFormasDeColaborar.DONADORDEDINERO)){
+            Double dineroNuevo = colaborador.getDineroDonado() + donacion;
+            colaboradorRepository.setDinero(id,dineroNuevo);
+            return true;
         }else{
-            resul = false;
+            return false;
         }
-        em.getTransaction().commit();
-
-        return resul;
     }
 
     public void actualizarPesosPuntosJPA(
             Double pesosDonados,
             Double viandasDistribuidas,
             Double viandasDonadas,
-            Double tarjetasRepartidas,
-            Double heladerasActivas,
             Double reparacionJPA) {
         this.setViandasDistribuidasPeso(viandasDistribuidas);
         this.setViandasDonadasPeso(viandasDonadas);
@@ -126,33 +121,24 @@ public class Fachada implements FachadaColaboradores{
         this.setArregloPeso(reparacionJPA);
     }
 
-    public void evento(NotificacionDTO notificacionDTO, EntityManager em){
+    public void evento(NotificacionDTO notificacionDTO){
 
         List<Long> ids = notificacionDTO.getIdColab();
+        List<Colaborador> colaboradores = colaboradorRepository.getColaboradoresByIdList(ids);
 
-        TypedQuery<Colaborador> query = em.createQuery(
-                "SELECT c FROM Colaborador c WHERE c.id IN :ids", Colaborador.class);
-        query.setParameter("ids", ids);
-        List<Colaborador> colabs =  query.getResultList();
-
-        System.out.println(colabs.toString());
-        for(Colaborador colaborador : colabs){
-            telegramProxy.notificar(colaborador.getChatID(), new MensajeDTO(notificacionDTO.getMsg()));
+        for(Colaborador colaborador : colaboradores){
+            telegramFachada.notificar(colaborador.getChatID(), new MensajeDTO(notificacionDTO.getMsg()));
         }
     }
 
-    public void arreglarFalla(Long id, IncidenteDTO incidenteDTO, EntityManager em){
+    public void arreglarFalla(Long id, IncidenteDTO incidenteDTO){
 
-        this.incidenteProxy.actualizar(incidenteDTO.getId(), incidenteDTO);
+        this.incidenteFachada.actualizar(incidenteDTO.getId(), incidenteDTO);
         this.heladerasFachada.cambiarEstadoActivo(incidenteDTO.getHeladeraId());
 
-        em.getTransaction().begin();
-        Colaborador colabDB = em.find(Colaborador.class, id);
-        colabDB.setHeladerasReparadas(colabDB.getHeladerasReparadas() + 1);
-        em.getTransaction().commit();
+        colaboradorRepository.sumarHeladeraReparadaById(id);
     }
-
-    public void nuevoColaboradorConChat(ColaboradorConChatDTO colaboradorConChatDTO, EntityManager em){
+    public void nuevoColaboradorConChat(ColaboradorConChatDTO colaboradorConChatDTO){
         Colaborador colaborador = new Colaborador();
         colaborador.setNombre(colaboradorConChatDTO.getNombre());
         colaborador.setFormas(colaboradorConChatDTO.getFormas());
@@ -161,87 +147,63 @@ public class Fachada implements FachadaColaboradores{
         colaborador.setHeladerasReparadas((double)0);
         colaborador.setChatID(colaboradorConChatDTO.getChatID());
 
-        em.getTransaction().begin();
-        Colaborador colabRta = this.colaboradorRepository.saveJPA(colaborador, em);
-        em.getTransaction().commit();
+        colaboradorRepository.saveJPA(colaborador);
         cantidadColaboradores.increment();
+    }
+
+    public void guardarIncidente(IncidenteDTO incidenteDTO){
+        colaboradorRepository.guardarIncidente(incidenteDTO);
+    }
+
+    public void guardarNotificacion(NotificacionDTO notificacionDTO){
+        colaboradorRepository.guardarEvento(notificacionDTO);
     }
 
 
 
 
 
+    // Metodos de metricas y Overrides
+    public void setRegistry(PrometheusMeterRegistry registry){
+        this.registry = registry;
 
-public void setRegistry(PrometheusMeterRegistry registry){
-    this.registry = registry;
+        this.cantidadColaboradores = Counter.builder("app.colaboradores.counter").
+                description("Cantidad de colaboradores").register(registry);
+        this.puntosTotal = Counter.builder("app.puntos.totales").
+                description("Cantidad de puntos totales").register(registry);
+    }
+    @Override
+    public void setLogisticaProxy(FachadaLogistica logistica) {
+        this.logisticaFachada = logistica;
+    }
 
-    this.cantidadColaboradores = Counter.builder("app.colaboradores.counter").
-            description("Cantidad de colaboradores").register(registry);
-    this.puntosTotal = Counter.builder("app.puntos.totales").
-            description("Cantidad de puntos totales").register(registry);
-}
-@Override
-public void setLogisticaProxy(FachadaLogistica logistica) {
-    this.logisticaFachada = logistica;
-}
+    @Override
+    public void setViandasProxy(FachadaViandas viandas) {
+        this.viandasFachada = viandas;
+    }
 
-@Override
-public void setViandasProxy(FachadaViandas viandas) {
-    this.viandasFachada = viandas;
-}
-
-public void setHeladerasProxy(HeladeraProxy heladeras) {
-    this.heladerasFachada = heladeras;
-}
-
-
-// Overrides de la fachada-------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
-@Override
-public ColaboradorDTO agregar(ColaboradorDTO colaboradorDTO){
-    Colaborador colaborador = new Colaborador();
-    colaborador.setNombre(colaboradorDTO.getNombre());
-    //colaborador.setFormas(colaboradorDTO.getFormas());
-    Colaborador colaboradorGuardado = this.colaboradorRepository.save(colaborador);
-    colaboradorDTO.setId(colaboradorGuardado.getId());
-    return colaboradorDTO;
-}
-@Override
-public ColaboradorDTO buscarXId(Long colaboradorId) {
-    Colaborador colab = colaboradorRepository.findById(colaboradorId);
-    List<FormaDeColaborarEnum> formas = new ArrayList<>();
-    formas.add(FormaDeColaborarEnum.DONADOR);
-    return new ColaboradorDTO(colab.getNombre(),formas);
-}
-@Override
-public ColaboradorDTO modificar(
-        Long colaboradorId, List<FormaDeColaborarEnum> nuevasFormasDeColaborar) {
-    //colaboradorRepository.modificarFormasDe(colaboradorId, nuevasFormasDeColaborar);
-    return this.buscarXId(colaboradorId);
-}
-
-@Override
-public void actualizarPesosPuntos(
-        Double pesosDonados,
-        Double viandasDistribuidas,
-        Double viandasDonadas,
-        Double tarjetasRepartidas,
-        Double heladerasActivas) {
-    this.setViandasDistribuidasPeso(viandasDistribuidas);
-    this.setViandasDonadasPeso(viandasDonadas);
-    this.setDineroDonadoPeso(pesosDonados);
-}
-
-@Override
-public Double puntos(Long colaboradorId) {
-    ColaboradorDTO colaboradorDTO = this.buscarXId(colaboradorId);
-    //Colaborador colaborador = colaboradorMapper.pam(colaboradorDTO);
-    Double puntosCalculados =
-            ((this.viandasDistribuidasPeso
-                    * logisticaFachada.trasladosDeColaborador(colaboradorId, 1, 2024).size()))
-                    + (this.viandasDonadasPeso
-                    * viandasFachada.viandasDeColaborador(colaboradorId, 1, 2024).size());
-    //colaborador.setPuntos(puntosCalculados);
-    return puntosCalculados;
-}
+    @Override
+    public ColaboradorDTO agregar(ColaboradorDTO colaboradorDTO){
+        return colaboradorDTO;
+    }
+    @Override
+    public ColaboradorDTO buscarXId(Long colaboradorId) {
+        List<FormaDeColaborarEnum> formas = new ArrayList<>();
+        return new ColaboradorDTO("",formas);
+    }
+    @Override
+        public ColaboradorDTO modificar(Long colaboradorId, List<FormaDeColaborarEnum> nuevasFormasDeColaborar) {
+        return this.buscarXId(colaboradorId);
+    }
+    @Override
+    public void actualizarPesosPuntos(Double pesosDonados, Double viandasDistribuidas, Double viandasDonadas,
+                                  Double tarjetasRepartidas, Double heladerasActivas){
+        this.setViandasDistribuidasPeso(viandasDistribuidas);
+        this.setViandasDonadasPeso(viandasDonadas);
+        this.setDineroDonadoPeso(pesosDonados);
+    }
+    @Override
+    public Double puntos(Long colaboradorId) {
+        return (double)0;
+    }
 }

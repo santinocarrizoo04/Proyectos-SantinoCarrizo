@@ -31,7 +31,7 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 
 public class WebApp{
     public static EntityManagerFactory entityManagerFactory;
-    public static final String TOKEN = "token";
+    public static String TOKEN;
 
     public static void main(String[] args) throws IOException, TimeoutException {
 
@@ -42,21 +42,15 @@ public class WebApp{
         startEntityManagerFactory(env);
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
-        var fachada  = new Fachada();
+        var fachada  = new Fachada(entityManager);
         var objectMapper = createObjectMapper();
-        var colabController = new ColaboradorController(fachada,entityManager, objectMapper);
+        var colabController = new ColaboradorController(fachada);
 
         fachada.setViandasProxy(new ViandasProxy(objectMapper));
         fachada.setLogisticaProxy(new LogisticaProxy(objectMapper));
-        fachada.setHeladerasProxy(new HeladeraProxy(objectMapper));
-        fachada.setIncidenteProxy(new IncidenteProxy(objectMapper));
-        fachada.setTelegramProxy(new TelegramProxy(objectMapper));
-
-        var URL_VIANDAS = env.get("URL_VIANDAS");
-        var URL_LOGISTICA = env.get("URL_LOGISTICA");
-        var URL_HELADERAS = env.get("URL_HELADERAS");
-        var URL_COLABORADORES = env.get("URL_COLABORADORES");
-        var URL_INCIDENTES = env.get("URL_INCIDENTES");
+        fachada.setHeladerasFachada(new HeladeraProxy(objectMapper));
+        fachada.setIncidenteFachada(new IncidenteProxy(objectMapper));
+        fachada.setTelegramFachada(new TelegramProxy(objectMapper));
 
         int port = Integer.parseInt(env.getOrDefault("PORT", "8080"));
 
@@ -79,6 +73,7 @@ public class WebApp{
 
         fachada.setRegistry(registry);
 
+        TOKEN = env.get("TOKEN_METRICAS");
 
         // Endpoints------------------------------------------------------------------
 
@@ -119,7 +114,6 @@ public class WebApp{
         objectMapper.setDateFormat(sdf);
     }
     public static void startEntityManagerFactory(Map<String, String> env) {
-        // https://stackoverflow.com/questions/8836834/read-environment-variables-in-persistence-xml-file
         Map<String, Object> configOverrides = new HashMap<String, Object>();
         String[] keys = new String[] { "javax.persistence.jdbc.url", "javax.persistence.jdbc.user",
                 "javax.persistence.jdbc.driver"};
@@ -130,22 +124,6 @@ public class WebApp{
             }
         }
         entityManagerFactory = Persistence.createEntityManagerFactory("db", configOverrides);
-    }
-
-    public static EntityManagerFactory startEntityManagerFactory1(){
-        // https://stackoverflow.com/questions/8836834/read-environment-variables-in-persistence-xml-file
-        Map<String, String> env =System.getenv();
-        Map<String, Object> configOverrides = new HashMap<String, Object>();
-
-        String[] keys = new String[] { "javax.persistence.jdbc.url", "javax.persistence.jdbc.user",
-                "javax.persistence.jdbc.driver"};
-        for (String key : keys) {
-            if (env.containsKey(key)) {
-                String value = env.get(key);
-                configOverrides.put(key, value);
-            }
-        }
-        return Persistence.createEntityManagerFactory("db", configOverrides);
     }
 
 }

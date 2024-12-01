@@ -1,52 +1,82 @@
 package ar.edu.utn.dds.k3003.repositorios;
 
-import ar.edu.utn.dds.k3003.facades.dtos.FormaDeColaborarEnum;
 import ar.edu.utn.dds.k3003.model.Colaborador;
+import ar.edu.utn.dds.k3003.model.dtos.IncidenteDTO;
+import ar.edu.utn.dds.k3003.model.dtos.NotificacionDTO;
 import ar.edu.utn.dds.k3003.model.enums.MisFormasDeColaborar;
 
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ColaboradorRepository {
 
   private static AtomicLong seqId = new AtomicLong();
-  private Collection<Colaborador> colaboradores;
-  public ColaboradorRepository() {
-    this.colaboradores = new ArrayList<>();
+  private EntityManager entityManager;
+  public ColaboradorRepository(EntityManager entityManager) {
+    this.entityManager = entityManager;
   }
 
-  public Colaborador saveJPA(Colaborador colaborador, EntityManager em){
-    colaborador.setPuntos((double)0);
-    em.persist(colaborador);
+  public ColaboradorRepository() {}
+  public Colaborador saveJPA(Colaborador colaborador){
+    entityManager.getTransaction().begin();
+    entityManager.persist(colaborador);
+    entityManager.getTransaction().commit();
     return colaborador;
   }
-  public Colaborador save(Colaborador colaborador){
-    if (Objects.isNull(colaborador.getId())) {
-      colaborador.setId(seqId.getAndIncrement());
-      this.colaboradores.add(colaborador);
-    }
+  public Colaborador findByIdJPA(Long id) {
+    entityManager.getTransaction().begin();
+    Colaborador colaborador = entityManager.find(Colaborador.class, id);
+    entityManager.getTransaction().commit();
+
     return colaborador;
   }
-  public Colaborador findByIdJPA(Long id, EntityManager em) {
-    return em.find(Colaborador.class, id);
-  }
-  public Colaborador findById(Long id) {
-    Optional<Colaborador> first =
-        this.colaboradores.stream().filter(x -> x.getId().equals(id)).findFirst();
-    return first.orElseThrow(
-        () -> new NoSuchElementException(String.format("No hay un colaborador de id: %s", id)));
+
+  public void modificarFormasDeJPA(Long id, List<MisFormasDeColaborar> formas){
+    entityManager.getTransaction().begin();
+    Colaborador colaborador = entityManager.find(Colaborador.class, id);
+    colaborador.setFormas(formas);
+    entityManager.getTransaction().commit();
   }
 
-  public void modificarFormasDeJPA(Long id, List<MisFormasDeColaborar> formas, EntityManager em){
-    this.findByIdJPA(id, em).setFormas(formas);
-  }
-  public void modificarFormasDe(Long id, List<MisFormasDeColaborar> formas) {
-    this.findById(id).setFormas(formas);
-  }
-
-  public void remove(Colaborador colaborador){
-    this.colaboradores = this.colaboradores.stream().filter(x -> !x.getId().equals(colaborador.getId())).toList();
+  public void setPuntos(Long id, Double puntos){
+    entityManager.getTransaction().begin();
+    Colaborador colaborador = entityManager.find(Colaborador.class, id);
+    colaborador.setPuntos(puntos);
+    entityManager.getTransaction().commit();
   }
 
+  public void setDinero(Long id, Double dineroTotal){
+    entityManager.getTransaction().begin();
+    Colaborador colaborador = entityManager.find(Colaborador.class, id);
+    colaborador.setDineroDonado(dineroTotal);
+    entityManager.getTransaction().commit();
+  }
+
+  public List<Colaborador> getColaboradoresByIdList(List<Long> ids){
+    TypedQuery<Colaborador> query = entityManager.createQuery(
+            "SELECT c FROM Colaborador c WHERE c.id IN :ids", Colaborador.class);
+    query.setParameter("ids", ids);
+    return query.getResultList();
+  }
+
+  public void sumarHeladeraReparadaById(Long id){
+    entityManager.getTransaction().begin();
+    Colaborador colaborador = entityManager.find(Colaborador.class, id);
+    colaborador.setHeladerasReparadas(colaborador.getHeladerasReparadas() + 1);
+    entityManager.getTransaction().commit();
+  }
+
+  public void guardarIncidente(IncidenteDTO incidenteDTO){
+    entityManager.getTransaction().begin();
+    entityManager.persist(incidenteDTO);
+    entityManager.getTransaction().commit();
+  }
+
+  public void guardarEvento(NotificacionDTO notificacionDTO){
+    entityManager.getTransaction().begin();
+    entityManager.persist(notificacionDTO);
+    entityManager.getTransaction().commit();
+  }
 }

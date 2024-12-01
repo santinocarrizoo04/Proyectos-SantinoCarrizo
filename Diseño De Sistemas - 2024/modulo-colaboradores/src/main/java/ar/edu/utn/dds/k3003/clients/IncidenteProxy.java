@@ -42,7 +42,6 @@ public class IncidenteProxy {
         if (execute.code() == HttpStatus.NOT_FOUND.getCode()){
             throw new NoSuchElementException("No se encontro al colaborador en INCIDENTES");
         }
-        //throw new RuntimeException("Error al conectarse con Incidentes");
     }
 
 }

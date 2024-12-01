@@ -3,51 +3,50 @@ package ar.edu.utn.dds.k3003.model.controllers;
 import ar.edu.utn.dds.k3003.app.Fachada;
 import ar.edu.utn.dds.k3003.model.Colaborador;
 import ar.edu.utn.dds.k3003.model.dtos.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import ar.edu.utn.dds.k3003.repositorios.ColaboradorMapper;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 
 public class ColaboradorController {
     private final Fachada fachada;
-    private final EntityManager entityManager;
-    private final ObjectMapper objectMapper;
+    private ColaboradorMapper colaboradorMapper;
 
-    public ColaboradorController(Fachada fachada, EntityManager entityManager, ObjectMapper objectMapper) {
+    public ColaboradorController(Fachada fachada) {
         this.fachada = fachada;
-        this.entityManager = entityManager;
-        this.objectMapper = objectMapper;
+        this.colaboradorMapper =  new ColaboradorMapper();
     }
 
     public void agregar(Context ctx){
         var colabDTO = ctx.bodyAsClass(MiColaboradorDTO.class);
-        var rtaDTO = this.fachada.agregarJPA(colabDTO, entityManager);
+
+        var rtaDTO = this.fachada.agregarJPA(colabDTO);
+
         ctx.status(HttpStatus.CREATED);
         ctx.json(rtaDTO);
     }
 
     public void buscar(Context ctx){
+        String parametroString = ctx.pathParam("colaboradorID");
+        Long colabID = Long.parseLong(parametroString);
         try{
-            String parametroString = ctx.pathParam("colaboradorID");
-            Long colabID = Long.parseLong(parametroString);
-            Colaborador colabBuscado = entityManager.find(Colaborador.class,colabID);
+            Colaborador colabBuscado = colaboradorMapper.pam(fachada.buscarXIdJPA(colabID));
             ctx.status(HttpStatus.OK);
             ctx.json(colabBuscado);
         }
         catch (NoSuchElementException ex) {
             ctx.status(HttpStatus.NOT_FOUND);
-            ctx.result(ex.getLocalizedMessage());
+            ctx.result("No se encontro al colaborador de id: " + colabID);
         }
     }
 
     public void cambiarFormas(Context ctx){
+        String parametroString = ctx.pathParam("colabID");
+        Long colabID = Long.parseLong(parametroString);
+        var formasBody = ctx.bodyAsClass(FormasDeColaborarDTO.class);
         try {
-            String parametroString = ctx.pathParam("colabID");
-            Long colabID = Long.parseLong(parametroString);
-            var cuerpoJSON = ctx.bodyAsClass(FormasDeColaborarDTO.class);
-            var rtaDTO = fachada.modificarJPA(colabID, cuerpoJSON.getFormas(), entityManager);
+            var rtaDTO = fachada.modificarJPA(colabID, formasBody.getFormas());
 
             ctx.status(HttpStatus.OK);
             ctx.result("Formas cambiadas correctamente");
@@ -55,7 +54,7 @@ public class ColaboradorController {
         }
         catch (NoSuchElementException ex){
             ctx.status(HttpStatus.NOT_FOUND);
-            ctx.result(ex.getLocalizedMessage());
+            ctx.result("No se encontro al colaborador de id: " + colabID);
         }
     }
 
@@ -63,52 +62,48 @@ public class ColaboradorController {
 
         var anio = ctx.queryParamAsClass("anio", Integer.class).get();
         var mes = ctx.queryParamAsClass("mes", Integer.class).get();
+        String parametroString = ctx.pathParam("colaboradorID");
+        Long colabID = Long.parseLong(parametroString);
 
         try {
-            String parametroString = ctx.pathParam("colaboradorID");
-            Long colabID = Long.parseLong(parametroString);
-            var puntosDelColab = this.fachada.puntosJPA(colabID, entityManager, anio, mes);
+            var puntosDelColab = this.fachada.puntosJPA(colabID, anio, mes);
             PuntosDeColaboradorDTO puntosDTOrta = new PuntosDeColaboradorDTO();
             puntosDTOrta.setPuntos(puntosDelColab);
-            ctx.status(HttpStatus.FOUND);
+            ctx.status(HttpStatus.OK);
             ctx.json(puntosDTOrta);
-
         }
         catch(NoSuchElementException ex){
             ctx.status(HttpStatus.NOT_FOUND);
-            ctx.result(ex.getLocalizedMessage());
+            ctx.result("No se encontro al colaborador de id: " + colabID);
         }
     }
 
     public void actualizar(Context ctx){
         var puntosBody = ctx.bodyAsClass(PuntosDTO.class);
         this.fachada.actualizarPesosPuntosJPA(puntosBody.getPesosDonados(), puntosBody.getViandasDistribuidas(),
-                puntosBody.getViandasDonadas(), puntosBody.getTarjetasRepartidas(),
-                puntosBody.getHeladerasActivas(), puntosBody.getArregloPeso());
+                puntosBody.getViandasDonadas(), puntosBody.getArregloPeso());
         ctx.status(HttpStatus.OK);
         ctx.result("Formula actualizada correctamente");
     }
 
     public void falla(Context ctx) throws IOException {
         var incidenteDTO = ctx.bodyAsClass(IncidenteDTO.class);
-        entityManager.getTransaction().begin();
-        entityManager.persist(incidenteDTO);
-        entityManager.getTransaction().commit();
+        fachada.guardarIncidente(incidenteDTO);
     }
 
     public void donacionDinero(Context ctx){
         var idString = ctx.pathParam("colabID");
         Long id = Long.parseLong(idString);
-        var dineroClass = ctx.bodyAsClass(DineroDTO.class);
+        var dineroBody = ctx.bodyAsClass(DineroDTO.class);
 
-        var resultado = this.fachada.donarDinero(id, dineroClass, entityManager);
+        var resultado = this.fachada.donarDinero(id, dineroBody);
 
         if(resultado){
             ctx.status(HttpStatus.OK);
-            ctx.json(dineroClass);
+            ctx.json(dineroBody);
         }
         else{
-            ctx.status(HttpStatus.PRECONDITION_FAILED);
+            ctx.status(HttpStatus.UNAUTHORIZED);
             ctx.result("El colaborador no es donador");
         }
     }
@@ -116,12 +111,8 @@ public class ColaboradorController {
     public void evento(Context ctx) throws IOException {
 
         var evento = ctx.bodyAsClass(NotificacionDTO.class);
-
-        entityManager.getTransaction().begin();
-        entityManager.persist(evento);
-        entityManager.getTransaction().commit();
-
-        this.fachada.evento(evento, entityManager);
+        fachada.guardarNotificacion(evento);
+        fachada.evento(evento);
     }
 
     public void arreglarHeladera(Context ctx) throws IOException {
@@ -129,11 +120,11 @@ public class ColaboradorController {
         Long id = Long.parseLong(idString);
         var incidenteBody = ctx.bodyAsClass(IncidenteDTO.class);
 
-       fachada.arreglarFalla(id, incidenteBody, entityManager);
+       fachada.arreglarFalla(id, incidenteBody);
     }
     public void nuevoColabConChat(Context ctx) throws IOException {
         var colaboradorConChatBody = ctx.bodyAsClass(ColaboradorConChatDTO.class);
 
-        fachada.nuevoColaboradorConChat(colaboradorConChatBody, entityManager);
+        fachada.nuevoColaboradorConChat(colaboradorConChatBody);
     }
 }
