@@ -15,7 +15,7 @@ git clone https://github.com/sisoputnfrba/so-deploy.git
 cd so-deploy
 ```
 
-Luego es necesario hacer el deploy del proyecto y asignar las variables por configuracion (IP's de los modulos y PATH's)
+Luego es necesario hacer el deploy del proyecto y asignar las variables por configuracion (IP's de los módulos y PATH's)
 
 ```bash
 ./deploy.sh -r=release -p=utils -p=kernel -p=cpu -p=memoria -p=entradasalida "tp-2024-1c-ChatGPT-CarreanOS"
@@ -23,7 +23,7 @@ Luego es necesario hacer el deploy del proyecto y asignar las variables por conf
 ./configure.sh PATH_XXXX /xxx/xxx
 ```
 
-Por ultimo ejecutar los modulos, pasandole el path de la configuracion, en el siguiente orden: 
+Por ultimo ejecutar los módulos, pasandole el path de la configuracion, en el siguiente orden: 
 
 1. Memoria
 2. CPU
