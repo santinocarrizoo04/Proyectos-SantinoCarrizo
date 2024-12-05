@@ -1,4 +1,4 @@
-package ar.edu.utn.dds.k3003.model.controllers;
+package ar.edu.utn.dds.k3003.controllers;
 
 import ar.edu.utn.dds.k3003.app.Fachada;
 import ar.edu.utn.dds.k3003.model.Colaborador;

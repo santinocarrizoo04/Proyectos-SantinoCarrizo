@@ -1,8 +1,8 @@
 package ar.edu.utn.dds.k3003.app;
 
 import ar.edu.utn.dds.k3003.clients.*;
+import ar.edu.utn.dds.k3003.controllers.ColaboradorController;
 import ar.edu.utn.dds.k3003.facades.dtos.Constants;
-import ar.edu.utn.dds.k3003.model.controllers.*;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
