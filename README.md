@@ -11,3 +11,7 @@ El proyecto se basó en el desarrollo de un sistema distribuido e interconectado
 ☁️ [Diseño De Sistemas:](https://github.com/santinocarrizoo04/Proyectos-SantinoCarrizo/tree/main/Dise%C3%B1o%20De%20Sistemas%20-%202024)
 
 El proyecto se basó en el desarrollo de una aplicacion web orientada a microservicios en colaboración con tres compañeros. Se aplicaron conceptos como Web Services, APIs RESTful, comunicación sincrónica y asincrónica y patrones de diseño. Para el frontend desarrollamos un bot de Telegram utilizando su API, que permite manejar el sistema desde distintos dispositivos con la app. El trabajo fue desarrollado en Java, utilizando Javalin, bases de datos PostgreSQL y Grafana para el servicio de métricas. Mi trabajo se centralizó en el desarrollo del modulo de Colaboradores y del bot de Telegram.
+
+📊 [Gestion de Datos:](https://github.com/santinocarrizoo04/Proyectos-SantinoCarrizo/tree/main/Gestion%20de%20Datos%20-%202025)
+
+El proyecto se basó en el desarrollo de un modelo de datos relacional normalizado para dar cumplimiento a una serie de requerimientos. En una segunda instancia, se solicito el desarrollo de un Data Warehouse utilizado para el analisis de metricas de negocio y el desarrollo de vistas de alto nivel sobre estas estadisticas. Se aplicaron conceptos de: Vistas, Stored Procedures, Funciones, Migracion de Datos, Data Warehouse, Modelo Estrella. El desarrollo de la aplicacion fue hecho con el motor de bases de datos SQL Server.
