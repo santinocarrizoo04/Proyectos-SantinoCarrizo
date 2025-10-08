@@ -14,7 +14,7 @@ El proyecto se basó en el desarrollo de una aplicacion web orientada a microser
 
 📊 [Gestion de Datos:](https://github.com/santinocarrizoo04/Proyectos-SantinoCarrizo/tree/main/Gestion%20de%20Datos%20-%202025)
 
-El proyecto se basó en el desarrollo de un modelo de datos relacional normalizado para dar cumplimiento a una serie de requerimientos. En una segunda instancia, se solicito el desarrollo de un Data Warehouse utilizado para el analisis de metricas de negocio y el desarrollo de vistas de alto nivel sobre estas estadisticas. Se aplicaron conceptos de: Vistas, Stored Procedures, Funciones, Migracion de Datos, Data Warehouse, Modelo Estrella. El desarrollo de la aplicacion fue hecho con el motor de bases de datos SQL Server.
+El proyecto se basó en el desarrollo de un modelo de datos relacional normalizado para dar cumplimiento a una serie de requerimientos. En una segunda instancia, se solicito el desarrollo de un Data Warehouse utilizado para el analisis de metricas de negocio y el desarrollo de vistas de alto nivel sobre estas estadisticas. Se aplicaron conceptos de: Vistas, Stored Procedures, Funciones, Migracion de Datos, Data Warehouse, Star Model. El desarrollo de la aplicacion fue hecho con el motor de bases de datos SQL Server.
 
 💻 [Técnicas Avanzadas de Programación:](https://github.com/santinocarrizoo04/Proyectos-SantinoCarrizo/tree/main/T%C3%A9cnicas%20Avanzadas%20de%20Programaci%C3%B3n%20-%202025)
 
