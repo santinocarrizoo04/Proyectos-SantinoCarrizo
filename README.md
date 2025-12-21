@@ -19,3 +19,7 @@ El proyecto se basó en el desarrollo de un modelo de datos relacional normaliza
 💻 [Técnicas Avanzadas de Programación:](https://github.com/santinocarrizoo04/Proyectos-SantinoCarrizo/tree/main/T%C3%A9cnicas%20Avanzadas%20de%20Programaci%C3%B3n%20-%202025)
 
 En este caso realizamos dos proyectos en grupo. En el primero, implementamos un framework utilizando conceptos de metaprogramación y mixines en Ruby. Para el segundo proyecto, utilizamos los conceptos del paradigma híbrido Objetos-Funcional para dar cumplimiento a los requerimientos del enunciado.
+
+🌐 [Simulación:](https://github.com/santinocarrizoo04/Proyectos-SantinoCarrizo/tree/main/Simulaci%C3%B3n%20-%202025)
+
+Junto con mi grupo utilizamos las bibliotecas Fitter, Pandas y Matplotlib de Python para el análisis de grandes conjuntos de datos, con el objetivo de estimar y ajustar funciones de distribución de probabilidad. Posteriormente, estas distribuciones fueron empleadas como insumo en un modelo de simulación, el cual también fue desarrollado e implementado en Google Colab.
