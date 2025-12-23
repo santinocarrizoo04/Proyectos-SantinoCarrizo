@@ -1,1 +1,12 @@
 .DS_Store
+.idea/
+*.iml
+.vscode/
+target/
+*.log
+logs/
+application-local.properties
+application-local.yml
+.env
+*.tar
+coverage/
