@@ -22,7 +22,7 @@ public class Colaborador {
     @Column
     private Long puntos;
 
-    @ElementCollection(targetClass = FormasDeColaborar.class)
+    @ElementCollection
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "colaborador_formas_de_colaborar", joinColumns = @JoinColumn(name = "idTarjeta"))
     @Column(name = "forma_de_colaborar")
@@ -34,6 +34,9 @@ public class Colaborador {
     @Column
     private Integer heladerasReparadas;
 
+    @Column
+    private Double cuentaCorriente;
+
     public Colaborador() {}
     public Colaborador(String name, List<FormasDeColaborar> formasDeColaborar) {
         this.nombreYApellido = name;
@@ -41,6 +44,7 @@ public class Colaborador {
         this.dineroDonado = 0.0;
         this.heladerasReparadas = 0;
         this.puntos = 0L;
+        this.cuentaCorriente = 0.0;
     }
 
     public void sumarDonacionDeDinero(Double dineroDonado) {
@@ -49,4 +53,6 @@ public class Colaborador {
     public void sumarReparacionesDeHeladeras(Integer cantidad) {
         this.heladerasReparadas += cantidad;
     }
+    public void depositarDinero(Double dinero) {this.cuentaCorriente += dinero;}
+    public void retirarDinero(Double dinero) {this.cuentaCorriente -= dinero;}
 }

@@ -12,6 +12,7 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
     // Spring parsea automaticamente el nombre findBy, deleteBy y genera automaticamente las Querys correctas
     // Por ahora no necesito nada mas que esto, pero se pueden hacer querys mas complejas a mano
     Optional<Colaborador> findByIdTarjeta(Long idTarjeta);
+    Optional<Colaborador> findByNombreYApellido(String nombreyApellido);
     void deleteByIdTarjeta(Long idTarjeta);
     Optional<Colaborador> existsColaboradorByNombreYApellido(String nombreYApellido);
 

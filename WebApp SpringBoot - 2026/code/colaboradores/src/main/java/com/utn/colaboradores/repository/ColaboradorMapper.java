@@ -8,9 +8,13 @@ public class ColaboradorMapper {
     public ColaboradorMapper() {}
 
     public ColaboradorDTO fromDomainToDTO(Colaborador colaborador) {
-        ColaboradorDTO colaboradorDTO =
-                new ColaboradorDTO(colaborador.getIdTarjeta(), colaborador.getNombreYApellido(), colaborador.getPuntos(),
-                        colaborador.getFormasDeColaborar(), colaborador.getDineroDonado(), colaborador.getHeladerasReparadas());
+        ColaboradorDTO colaboradorDTO = new ColaboradorDTO(colaborador.getNombreYApellido(),
+                                                            colaborador.getFormasDeColaborar());
+        colaboradorDTO.setPuntos(colaborador.getPuntos());
+        colaboradorDTO.setDineroDonado(colaborador.getDineroDonado());
+        colaboradorDTO.setHeladerasReparadas(colaborador.getHeladerasReparadas());
+        colaboradorDTO.setIdTarjeta(colaborador.getIdTarjeta());
+        colaboradorDTO.setCuentaCorriente(colaborador.getCuentaCorriente());
         return colaboradorDTO;
     }
 
@@ -21,6 +25,7 @@ public class ColaboradorMapper {
         colaborador.setDineroDonado(colaboradorDTO.getDineroDonado());
         colaborador.setPuntos(colaboradorDTO.getPuntos());
         colaborador.setHeladerasReparadas(colaboradorDTO.getHeladerasReparadas());
+        colaborador.setCuentaCorriente(colaboradorDTO.getCuentaCorriente());
         return colaborador;
     }
 }

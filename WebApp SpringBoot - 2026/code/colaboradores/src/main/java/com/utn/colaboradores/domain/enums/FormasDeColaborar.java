@@ -1,7 +1,8 @@
 package com.utn.colaboradores.domain.enums;
 
 public enum FormasDeColaborar {
-    DONADORVIANDAS,
+    DONADORDEVIANDAS,
     TRANSPORTADOR,
-    DONADORDINERO
+    DONADORDEDINERO,
+    TECNICO
 }

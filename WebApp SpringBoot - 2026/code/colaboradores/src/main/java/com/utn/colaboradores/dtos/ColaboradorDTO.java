@@ -4,7 +4,7 @@ import com.utn.colaboradores.domain.enums.FormasDeColaborar;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.*;
 
 @Setter
 @Getter
@@ -16,14 +16,14 @@ public class ColaboradorDTO {
     private List<FormasDeColaborar> formasDeColaborar;
     private Double dineroDonado;
     private Integer heladerasReparadas;
+    private Double cuentaCorriente;
 
-    public ColaboradorDTO(Long idTarjeta, String nombreYApellido, Long puntos, List<FormasDeColaborar> formasDeColaborar,
-                          Double dineroDonado, Integer heladerasReparadas) {
-        this.idTarjeta = idTarjeta;
+    public ColaboradorDTO(String nombreYApellido, List<FormasDeColaborar> formasDeColaborar) {
         this.nombreYApellido = nombreYApellido;
-        this.puntos = puntos;
         this.formasDeColaborar = formasDeColaborar;
-        this.dineroDonado = dineroDonado;
-        this.heladerasReparadas = heladerasReparadas;
+        this.dineroDonado = 0.0;
+        this.heladerasReparadas = 0;
+        this.puntos = 0L;
+        this.cuentaCorriente = 0.0;
     }
 }
