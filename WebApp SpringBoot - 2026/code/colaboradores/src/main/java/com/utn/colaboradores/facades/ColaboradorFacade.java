@@ -12,7 +12,6 @@ import com.utn.colaboradores.repository.ColaboradorMapper;
 import com.utn.colaboradores.repository.ColaboradorRepository;
 import jakarta.transaction.Transactional;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -77,16 +76,8 @@ public class ColaboradorFacade {
     public ColaboradorDTO sumarDonacionDinero(Long idTarjetaColaborador, Double dineroDonado){
         try{
             Colaborador colaboradorBuscado = this.colaboradorRepository.findByIdTarjeta(idTarjetaColaborador).get();
-            if(colaboradorBuscado.getCuentaCorriente() >= dineroDonado &&
-                    colaboradorBuscado.getFormasDeColaborar().contains(FormasDeColaborar.DONADORDEDINERO)){
-                colaboradorBuscado.retirarDinero(dineroDonado);
-                colaboradorBuscado.sumarDonacionDeDinero(dineroDonado);
-                return this.colaboradorMapper.fromDomainToDTO(colaboradorBuscado);
-            }else if(colaboradorBuscado.getFormasDeColaborar().contains(FormasDeColaborar.DONADORDEDINERO)){
-                throw new DineroInsuficienteException("Dinero insuficiente en cuenta corriente");
-            }else{
-                throw new FormaDeColaborarInvalidaException("El colaborador no esta habilitado a donar dinero");
-            }
+            colaboradorBuscado.sumarDonacionDeDinero(dineroDonado);
+            return this.colaboradorMapper.fromDomainToDTO(colaboradorBuscado);
         }catch (ColaboradorNoEncontradoException e){
             throw new ColaboradorNoEncontradoException("No existe un colaborador con ese ID");
         }
@@ -183,9 +174,14 @@ public class ColaboradorFacade {
         }
     }
 
-    public HttpStatus borrarColaboradorPorId(Long idTarjetaColaborador) {
-        this.colaboradorRepository.deleteById(idTarjetaColaborador);
-        return HttpStatus.OK;
+    public void borrarColaboradorPorId(Long idTarjetaColaborador) {
+
+        if(colaboradorRepository.findById(idTarjetaColaborador).isPresent()){
+            this.colaboradorRepository.deleteByIdTarjeta(idTarjetaColaborador);
+
+        }else{
+            throw new ColaboradorNoEncontradoException("No existe un colaborador con ese ID");
+        }
     }
 
     public void resetDB(){

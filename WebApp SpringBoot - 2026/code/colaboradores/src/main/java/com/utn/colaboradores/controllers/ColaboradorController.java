@@ -1,14 +1,20 @@
 package com.utn.colaboradores.controllers;
 
+import com.utn.colaboradores.domain.Colaborador;
 import com.utn.colaboradores.domain.enums.FormasDeColaborar;
 import com.utn.colaboradores.dtos.ColaboradorDTO;
 import com.utn.colaboradores.dtos.FormulaDTO;
 import com.utn.colaboradores.facades.ColaboradorFacade;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
+@RequestMapping("/colaboradores")
 public class ColaboradorController {
 
     private ColaboradorFacade colaboradorFacade; //Autowired por anotation @Service
@@ -18,68 +24,99 @@ public class ColaboradorController {
 
     }
 
-    @PostMapping("/colaboradores")
-    public ColaboradorDTO postColaborador(@RequestBody ColaboradorDTO colaboradorDTO) {
-        return this.colaboradorFacade.agregarColaboradorAlSistema(colaboradorDTO);
+    @RequestMapping(method = RequestMethod.POST)
+    public ResponseEntity<ColaboradorDTO> postColaborador(@RequestBody ColaboradorDTO colaboradorDTO) {
+
+        ColaboradorDTO colaboradorAgregado = this.colaboradorFacade.agregarColaboradorAlSistema(colaboradorDTO);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{idTarjeta}")
+                .buildAndExpand(colaboradorAgregado.getIdTarjeta())
+                .toUri();
+
+        return ResponseEntity
+                .created(location)
+                .body(colaboradorAgregado);
     }
 
-    @PostMapping("/colaboradores/donacionDinero")
-    public ColaboradorDTO postDonacionDinero(@RequestParam Long idTarjeta, @RequestBody Double dineroDonado ) {
-        return this.colaboradorFacade.sumarDonacionDinero(idTarjeta, dineroDonado);
+    @PostMapping("/donacionDinero")
+    public ResponseEntity<ColaboradorDTO> postDonacionDinero(@RequestParam Long idTarjeta, @RequestBody Double dineroDonado ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(this.colaboradorFacade.sumarDonacionDinero(idTarjeta, dineroDonado));
     }
 
-    @PostMapping("/colaboradores/arreglos")
-    public ColaboradorDTO postArreglos(@RequestParam Long idTarjeta, @RequestBody Integer cantidadHeladerasArregladas ) {
-        return this.colaboradorFacade.sumarArreglosHeladeras(idTarjeta, cantidadHeladerasArregladas);
+    @PostMapping("/arreglos")
+    public ResponseEntity<ColaboradorDTO> postArreglos(@RequestParam Long idTarjeta, @RequestBody Integer cantidadHeladerasArregladas ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(this.colaboradorFacade.sumarArreglosHeladeras(idTarjeta, cantidadHeladerasArregladas));
     }
 
-    @PostMapping("/colaboradores/deposito")
-    public ColaboradorDTO postDeposito(@RequestParam Long idTarjeta, @RequestBody Double dineroDepositado ) {
-        return this.colaboradorFacade.depositarDinero(idTarjeta, dineroDepositado);
+    @PostMapping("/deposito")
+    public ResponseEntity<ColaboradorDTO> postDeposito(@RequestParam Long idTarjeta, @RequestBody Double dineroDepositado ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(this.colaboradorFacade.depositarDinero(idTarjeta, dineroDepositado));
     }
 
-    @PostMapping("/colaboradores/retiro")
-    public ColaboradorDTO postRetiro(@RequestParam Long idTarjeta, @RequestBody Double dineroRetirado ) {
-        return this.colaboradorFacade.retirarDinero(idTarjeta, dineroRetirado);
+    @PostMapping("/retiro")
+    public ResponseEntity<ColaboradorDTO> postRetiro(@RequestParam Long idTarjeta, @RequestBody Double dineroRetirado ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(this.colaboradorFacade.retirarDinero(idTarjeta, dineroRetirado));
     }
 
-    @PostMapping("/colaboradores/donacionViandas")
-    public ColaboradorDTO postDonacionViandas(@RequestParam Long idTarjeta, @RequestBody Integer cantidadViandas ) {
-        return this.colaboradorFacade.sumarDonacionViandas(idTarjeta, cantidadViandas);
+    @PostMapping("/donacionViandas")
+    public ResponseEntity<ColaboradorDTO> postDonacionViandas(@RequestParam Long idTarjeta, @RequestBody Integer cantidadViandas ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(this.colaboradorFacade.sumarDonacionViandas(idTarjeta, cantidadViandas));
     }
 
-    @PostMapping("/colaboradores/trasladoViandas")
-    public ColaboradorDTO postTrasladoViandas(@RequestParam Long idTarjeta, @RequestBody Integer cantidadTraslados ) {
-        return this.colaboradorFacade.sumarDonacionViandas(idTarjeta, cantidadTraslados);
+    @PostMapping("/trasladoViandas")
+    public ResponseEntity<ColaboradorDTO> postTrasladoViandas(@RequestParam Long idTarjeta, @RequestBody Integer cantidadTraslados ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(this.colaboradorFacade.sumarTransportesViandas(idTarjeta, cantidadTraslados));
     }
 
-    @GetMapping("/colaboradores")
-    public ColaboradorDTO getColaboradores(@RequestParam Long idTarjeta) {
-        return this.colaboradorFacade.obtenerColaboradorPorId(idTarjeta);
+    @GetMapping
+    public ResponseEntity<ColaboradorDTO> getColaboradores(@RequestParam Long idTarjeta) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(this.colaboradorFacade.obtenerColaboradorPorId(idTarjeta));
     }
 
-    @GetMapping("/colaboradores/puntos")
-    public ColaboradorDTO getPuntos(@RequestParam Long idTarjeta) {
-        return this.colaboradorFacade.calcularPuntos(idTarjeta);
+    @GetMapping("/puntos")
+    public ResponseEntity<ColaboradorDTO> getPuntos(@RequestParam Long idTarjeta) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(this.colaboradorFacade.calcularPuntos(idTarjeta));
     }
 
-    @PatchMapping("/colaboradores/formasDeColaborar")
-    public ColaboradorDTO actualizarFormasDeColaborar(@RequestParam Long idTarjeta,
-                                                      @RequestBody List<FormasDeColaborar> formasDeColaborar) {
-        return this.colaboradorFacade.actualizarFormasDeColaborar(idTarjeta, formasDeColaborar);
+    @PatchMapping("/formasDeColaborar")
+    public ResponseEntity<ColaboradorDTO> actualizarFormasDeColaborar(@RequestParam Long idTarjeta,
+                                                                      @RequestBody List<FormasDeColaborar> formasDeColaborar){
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(this.colaboradorFacade.actualizarFormasDeColaborar(idTarjeta, formasDeColaborar));
     }
 
-    @PutMapping("/colaboradores/formula")
-    public void actualizarFormula(@RequestBody FormulaDTO formula) {
+    @PutMapping("/formula")
+    public ResponseEntity actualizarFormula(@RequestBody FormulaDTO formula) {
         this.colaboradorFacade.actualizarCoeficientesFormula(formula);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
-    @DeleteMapping("/colaboradores")
-    public void borrarColaborador(@RequestParam Long idTarjeta) {
+    @DeleteMapping
+    public ResponseEntity borrarColaborador(@RequestParam Long idTarjeta) {
         this.colaboradorFacade.borrarColaboradorPorId(idTarjeta);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
-    @DeleteMapping("/colaboradores/resetDB")
+    @DeleteMapping("/resetDB")
     public void resetDB() {
         this.colaboradorFacade.resetDB();
     }
